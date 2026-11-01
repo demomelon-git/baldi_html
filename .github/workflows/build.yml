@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK from zip
 
 on:
   push:
@@ -19,10 +19,25 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Prepare web files
+      - name: Unpack game
         run: |
-          mkdir -p www
-          cp "$(ls *.html | head -n 1)" www/index.html
+          rm -rf www && mkdir www
+          if [ -d game ]; then
+            echo "Беру папку game/"
+            cp -r game/. www/
+          else
+            ZIP=$(ls *.zip 2>/dev/null | head -n 1)
+            [ -n "$ZIP" ] || { echo "В корне репозитория нет ни .zip, ни папки game/"; exit 1; }
+            echo "Распаковываю $ZIP"
+            unzip -q "$ZIP" -d www
+          fi
+          # если архив содержит одну вложенную папку, поднять её содержимое наверх
+          F=$(find www -name TMR.html | head -n 1)
+          [ -n "$F" ] || { echo "TMR.html не найден в архиве"; exit 1; }
+          D=$(dirname "$F")
+          if [ "$D" != "www" ]; then cp -r "$D"/. www/; fi
+          cp www/TMR.html www/index.html
+          ls www
 
       - name: Create Android project (Capacitor)
         run: |
