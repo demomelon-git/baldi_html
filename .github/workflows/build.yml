@@ -22,7 +22,7 @@ jobs:
       - name: Prepare web files
         run: |
           mkdir -p www
-          cp baldi.html www/index.html
+          cp "$(ls *.html | head -n 1)" www/index.html
 
       - name: Create Android project (Capacitor)
         run: |
